@@ -111,8 +111,13 @@ namespace WebpageSteganography
     {
         struct Attribute
         {
-            string Key;
-            string Value;
+            public readonly string Key;
+            public readonly string Value;
+            public Attribute(string key)
+            {
+                Key = key;
+                Value = null;
+            }
             public Attribute(string key, string value)
             {
                 Key = key;
@@ -128,20 +133,51 @@ namespace WebpageSteganography
             return line[0] == '<' && line[1] != '/';
         }
         public HtmlOpeningTagLine(string line) : base(line) {
-            line = LineContent.Trim(new[] { '<', '>' });
+            line = LineContent.Trim(new[] { '<', '/', '>' });
 
-            string[] parts = line.Split();
+            int spaceIndex = line.IndexOf(' ');
+            if (spaceIndex == -1)
+            {
+                Name = line;
+                line = "";
+            } else
+            {
+                Name = line.Substring(0, spaceIndex);
+                line = line.Substring(spaceIndex + 1);
+            }
 
-            Name = parts[0];
+            Attributes = GetAttributes(line);
+        }
 
-            Attributes = parts
-                .Skip(1)
-                .Select(attributePart =>
+        private Attribute[] GetAttributes(string line)
+        {
+            List<Attribute> attributes = new List<Attribute>();
+
+            line = line.Trim();
+            while (line.Length != 0)
+            {
+                string key = line.Split(new[] { '=', ' ' }).First();
+
+                line = line.Substring(key.Length).Trim();
+                if (line.Length == 0 || line[0] != '=')
                 {
-                    string[] attributeKeyValue = attributePart.Split(new[] { '=', ' ', '\'', '"' }, 2, StringSplitOptions.RemoveEmptyEntries); // check
-                    return new Attribute(attributeKeyValue[0], attributeKeyValue[1]);
-                })
-                .ToArray();
+                    attributes.Add(new Attribute(key));
+                } else
+                {
+                    line = line.TrimStart(new[] { '=', ' ' });
+
+                    char quote = line[0];
+                    int closingQuoteIndex = line.IndexOf(quote, 1);
+                    string value = line.Substring(0, closingQuoteIndex + 1);
+
+                    attributes.Add(new Attribute(key, value));
+                    line = line.Substring(value.Length);
+
+                    line = line.TrimStart();
+                }
+            }
+
+            return attributes.ToArray();
         }
     }
     class HtmlClosingTagLine : DocumentLine
@@ -164,14 +200,14 @@ namespace WebpageSteganography
 
     abstract class Document
     {
-        DocumentPart[] parts;
+        DocumentPart[] Parts;
         public Document(string fileName)
         {
             if (File.Exists(fileName))
             {
                 string[] lines = File.ReadAllLines(fileName, Encoding.UTF8); // CSS??
                 //lines = TrimWhitespace(lines);
-                parts = ParseLines(lines);
+                Parts = ParseLines(lines);
             }
             else
             {
