@@ -16,11 +16,12 @@ namespace WebpageSteganography
 
     interface DocumentPart
     {
-
+        string Value { get; }
     }
 
     class DocumentBlock : DocumentPart
     {
+        public string Value => Parts[0].Value;
         public DocumentPart[] Parts;
         public int Length => Parts.Aggregate(0, (length, part) =>
         {
@@ -34,13 +35,13 @@ namespace WebpageSteganography
 
     class DocumentLine : DocumentPart
     {
+        public string Value => LineContent;
         protected string RawLine;
-        protected string LineContent;
+        protected string LineContent => CollapseWhitespace(RawLine);
         bool IsEmpty => LineContent.Length == 0;
         static string CollapseWhitespace(string line)
         {
             string[] parts = line.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            //var nonEmptyParts = parts.Where(part => part.Length != 0);
             return string.Join(" ", parts);
         }
 
@@ -48,7 +49,6 @@ namespace WebpageSteganography
         public DocumentLine(string line)
         {
             RawLine = line;
-            LineContent = CollapseWhitespace(line);
         }
     }
 
