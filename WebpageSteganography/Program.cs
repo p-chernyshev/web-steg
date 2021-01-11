@@ -379,4 +379,13 @@ namespace WebpageSteganography
 
     #endregion
 
+    #region Methods
+
+    interface StegMethod<T>
+    {
+        T AddMessage(BitStack messageBits, T containerValue);
+        // GetMessage
+    }
+
+    #endregion
 }
