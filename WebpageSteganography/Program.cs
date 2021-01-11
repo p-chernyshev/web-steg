@@ -172,26 +172,28 @@ namespace WebpageSteganography
         }
     }
 
+    struct HtmlAttribute
+    {
+        public readonly string RawString;
+        public readonly string Key;
+        public readonly string Value;
+        public HtmlAttribute(string rawString, string key)
+        {
+            RawString = rawString;
+            Key = key;
+            Value = null;
+        }
+        public HtmlAttribute(string rawValue, string key, string value)
+        {
+            RawString = rawValue;
+            Key = key;
+            Value = value;
+        }
+    }
     class HtmlOpeningTagLine : DocumentLine
     {
-        struct Attribute
-        {
-            public readonly string Key;
-            public readonly string Value;
-            public Attribute(string key)
-            {
-                Key = key;
-                Value = null;
-            }
-            public Attribute(string key, string value)
-            {
-                Key = key;
-                Value = value;
-            }
-        }
-
         public readonly string Name;
-        Attribute[] Attributes;
+        HtmlAttribute[] Attributes;
         public static bool CanParse(string line)
         {
             line = line.Trim();
@@ -214,31 +216,36 @@ namespace WebpageSteganography
             Attributes = GetAttributes(line);
         }
 
-        private Attribute[] GetAttributes(string line)
+        private HtmlAttribute[] GetAttributes(string line)
         {
-            List<Attribute> attributes = new List<Attribute>();
+            List<HtmlAttribute> attributes = new List<HtmlAttribute>();
 
             line = line.Trim();
             while (line.Length != 0)
             {
                 string key = line.Split(new[] { '=', ' ' }).First();
 
-                line = line.Substring(key.Length).Trim();
-                if (line.Length == 0 || line[0] != '=')
+                string lineWithoutKey = line
+                        .Substring(key.Length)
+                        .TrimStart();
+                if (lineWithoutKey.Length == 0 || lineWithoutKey[0] != '=')
                 {
-                    attributes.Add(new Attribute(key));
+                    attributes.Add(new HtmlAttribute(key, key));
+                    line = lineWithoutKey;
                 } else
                 {
-                    line = line.TrimStart(new[] { '=', ' ' });
+                    char quote = lineWithoutKey.TrimStart(new[] { '=', ' ' })[0];
 
-                    char quote = line[0];
-                    int closingQuoteIndex = line.IndexOf(quote, 1);
-                    string value = line.Substring(0, closingQuoteIndex + 1);
+                    int openingQuoteIndex = line.IndexOf(quote);
+                    int closingQuoteIndex = line.IndexOf(quote, openingQuoteIndex + 1);
+                    string rawKeyValue = line.Substring(0, closingQuoteIndex + 1);
+                    string value = line.Substring(openingQuoteIndex, closingQuoteIndex - openingQuoteIndex + 1);
 
-                    attributes.Add(new Attribute(key, value));
-                    line = line.Substring(value.Length);
+                    attributes.Add(new HtmlAttribute(rawKeyValue, key, value));
 
-                    line = line.TrimStart();
+                    line = line
+                        .Substring(rawKeyValue.Length)
+                        .TrimStart();
                 }
             }
 
