@@ -21,8 +21,15 @@ namespace WebpageSteganography
 
     class DocumentBlock : DocumentPart
     {
-        protected DocumentLine[] Lines;
-        public int Length => Lines.Length;
+        public DocumentPart[] Parts;
+        public int Length => Parts.Aggregate(0, (length, part) =>
+        {
+            if (part is DocumentBlock block)
+            {
+                return length + block.Length;
+            }
+            return length + 1;
+        });
     }
 
     class DocumentLine : DocumentPart
@@ -45,8 +52,42 @@ namespace WebpageSteganography
         }
     }
 
+    class CssMediaBlock : DocumentBlock
+    {
+        public static bool CanParse(string line)
+        {
+            line = line.Trim();
+            return line.Length != 0 && line[0] == '@';
+        }
+        public CssMediaBlock(string[] lines)
+        {
+            List<DocumentPart> parts = new List<DocumentPart>();
+
+            parts.Add(new DocumentLine(lines[0]));
+            lines = lines.Skip(1).ToArray();
+            while (!CssClosingBraceLine.CanParse(lines[0]))
+            {
+                if (CssSelectorLine.CanParse(lines[0]))
+                {
+                    CssRuleBlock ruleBlock = new CssRuleBlock(lines);
+                    parts.Add(ruleBlock);
+                    lines = lines.Skip(ruleBlock.Length).ToArray();
+                } else
+                {
+                    parts.Add(new DocumentLine(lines[0]));
+                    lines = lines.Skip(1).ToArray();
+                }
+            }
+            parts.Add(new DocumentLine(lines[0]));
+
+            Parts = parts.ToArray();
+        }
+
+    }
+
     class CssRuleBlock : DocumentBlock
     {
+        public static bool CanParse(string line) => CssSelectorLine.CanParse(line);
         //nocheck
         //no empty lines
         public CssRuleBlock(string[] lines)
@@ -64,7 +105,7 @@ namespace WebpageSteganography
             string closingBraceLine = lines.Skip(selectors.Length + properties.Length).First();
             DocumentLine closingBrace = new CssClosingBraceLine(closingBraceLine);
 
-            Lines = selectors.Concat(properties).Append(closingBrace).ToArray();
+            Parts = selectors.Concat(properties).Append(closingBrace).ToArray();
         }
     }
 
@@ -74,7 +115,7 @@ namespace WebpageSteganography
         public static bool CanParse(string line)
         {
             line = line.Trim();
-            return line.Last() == ',' || line.Last() == '{';
+            return line.Length != 0 && (line.Last() == ',' || line.Last() == '{');
         }
         public CssSelectorLine(string line) : base(line) { }
 
@@ -103,7 +144,7 @@ namespace WebpageSteganography
     {
         public HtmlBodyBlock(DocumentLine[] lines)
         {
-            Lines = lines;
+            Parts = lines;
         }
     }
 
@@ -279,9 +320,21 @@ namespace WebpageSteganography
 
             while (lines.Length != 0)
             {
-                CssRuleBlock block = new CssRuleBlock(lines);
-                parts.Add(block);
-                lines = lines.Skip(block.Length).ToArray();
+                if (CssMediaBlock.CanParse(lines[0]))
+                {
+                    CssMediaBlock mediaBlock = new CssMediaBlock(lines);
+                    parts.Add(mediaBlock);
+                    lines = lines.Skip(mediaBlock.Length).ToArray();
+                } else if (CssSelectorLine.CanParse(lines[0]))
+                {
+                    CssRuleBlock ruleBlock = new CssRuleBlock(lines);
+                    parts.Add(ruleBlock);
+                    lines = lines.Skip(ruleBlock.Length).ToArray();
+                } else
+                {
+                    parts.Add(new DocumentLine(lines[0]));
+                    lines = lines.Skip(1).ToArray();
+                }
             }
             
             return parts.ToArray();
