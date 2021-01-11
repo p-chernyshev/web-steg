@@ -14,6 +14,8 @@ namespace WebpageSteganography
         }
     }
 
+    #region DocumentParts
+
     interface DocumentPart
     {
         string Value { get; }
@@ -239,6 +241,10 @@ namespace WebpageSteganography
     //    public HtmlTextLine(string line) : base(line) { }
     //}
 
+    #endregion
+
+    #region Documents
+
     abstract class Document
     {
         DocumentPart[] Parts;
@@ -341,4 +347,7 @@ namespace WebpageSteganography
         }
 
     }
+
+    #endregion
+
 }
