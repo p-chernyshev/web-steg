@@ -39,7 +39,6 @@ namespace WebpageSteganography
 
     interface StegContainer<T>
     {
-        void AddMessage(string message, StegMethod<T> method) => AddMessage(new BitStack(message), method);
         void AddMessage(BitStack messageBits, StegMethod<T> method);
     }
 
