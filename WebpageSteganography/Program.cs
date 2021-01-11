@@ -317,6 +317,15 @@ namespace WebpageSteganography
             }
         }
 
+        public void WriteToFile(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+            File.WriteAllLines(fileName, GenerateLines());
+        }
+
         //string[] TrimWhitespace(string[] lines)
         //{
         //    return lines
