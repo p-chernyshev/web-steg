@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,27 @@ namespace WebpageSteganography
         }
     }
 
+    class BitStack
+    {
+        public int Length => bitArray.Length;
+        BitArray bitArray;
+
+        public BitStack(string str)
+        {
+            byte[] bytes = str
+                .Select(character => Convert.ToByte(character))
+                .ToArray();
+            bitArray = new BitArray(bytes);
+        }
+        public bool Pop()
+        {
+            if (bitArray.Length == 0) throw new InvalidOperationException("Bit stack has no elements");
+            bool bit = bitArray[0];
+            bitArray.RightShift(1);
+            bitArray.Length--;
+            return bit;
+        }
+    }
     #region DocumentParts
 
     interface DocumentPart
