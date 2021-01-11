@@ -45,7 +45,10 @@ namespace WebpageSteganography
 
     #region DocumentParts
 
-    interface DocumentPart : StegContainer<string> { }
+    interface DocumentPart : StegContainer<string>
+    {
+        string[] GenerateLines();
+    }
 
     class DocumentBlock : DocumentPart
     {
@@ -65,6 +68,13 @@ namespace WebpageSteganography
                 part.AddMessage(messageBits, method);
             }
         }
+
+        public string[] GenerateLines()
+        {
+            return Parts
+                .SelectMany(part => part.GenerateLines())
+                .ToArray();
+    }
     }
 
     class DocumentLine : DocumentPart
@@ -90,6 +100,7 @@ namespace WebpageSteganography
         {
             method.AddMessage(messageBits, LineContent);
         }
+        public string[] GenerateLines() => new string[] { LineContent };
     }
 
     class CssMediaBlock : DocumentBlock
