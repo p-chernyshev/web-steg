@@ -387,5 +387,17 @@ namespace WebpageSteganography
         // GetMessage
     }
 
+    class TrailingSpacesMethod : StegMethod<string>
+    {
+        public string AddMessage(BitStack messageBits, string containerValue)
+        {
+            if (messageBits.Pop())
+            {
+                containerValue += " ";
+            }
+            return containerValue;
+        }
+    }
+
     #endregion
 }
