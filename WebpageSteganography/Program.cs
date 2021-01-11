@@ -425,7 +425,7 @@ namespace WebpageSteganography
     {
         public string AddMessage(BitStack messageBits, string containerValue)
         {
-            if (messageBits.Pop())
+            if (messageBits.Length != 0 && messageBits.Pop())
             {
                 containerValue += " ";
             }
