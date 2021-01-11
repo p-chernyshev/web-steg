@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -36,12 +36,16 @@ namespace WebpageSteganography
             return bit;
         }
     }
+
+    interface StegContainer<T>
+    {
+        void AddMessage(string message, StegMethod<T> method) => AddMessage(new BitStack(message), method);
+        void AddMessage(BitStack messageBits, StegMethod<T> method);
+    }
+
     #region DocumentParts
 
-    interface DocumentPart
-    {
-
-    }
+    interface DocumentPart : StegContainer<string> { }
 
     class DocumentBlock : DocumentPart
     {
@@ -54,6 +58,13 @@ namespace WebpageSteganography
             }
             return length + 1;
         });
+
+        public void AddMessage(BitStack messageBits, StegMethod<string> method) {
+            foreach (DocumentPart part in Parts)
+            {
+                part.AddMessage(messageBits, method);
+            }
+        }
     }
 
     class DocumentLine : DocumentPart
@@ -73,6 +84,11 @@ namespace WebpageSteganography
         {
             RawLine = line;
             LineContent = CollapseWhitespace(line);
+        }
+
+        public void AddMessage(BitStack messageBits, StegMethod<string> method)
+        {
+            method.AddMessage(messageBits, LineContent);
         }
     }
 
@@ -274,7 +290,7 @@ namespace WebpageSteganography
 
     #region Documents
 
-    abstract class Document
+    abstract class Document: StegContainer<string>
     {
         DocumentPart[] Parts;
         public Document(string fileName)
@@ -288,6 +304,14 @@ namespace WebpageSteganography
             else
             {
                 throw new FileNotFoundException($"File '{fileName}' not found");
+            }
+        }
+
+        public void AddMessage(BitStack messageBits, StegMethod<string> method)
+        {
+            foreach (DocumentPart part in Parts)
+            {
+                part.AddMessage(messageBits, method);
             }
         }
 
@@ -371,7 +395,7 @@ namespace WebpageSteganography
                     lines = lines.Skip(1).ToArray();
                 }
             }
-            
+
             return parts.ToArray();
         }
 
