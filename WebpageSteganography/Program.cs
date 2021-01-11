@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -290,9 +290,8 @@ namespace WebpageSteganography
 
     #region Documents
 
-    abstract class Document: StegContainer<string>
+    abstract class Document : DocumentBlock, StegContainer<string>
     {
-        DocumentPart[] Parts;
         public Document(string fileName)
         {
             if (File.Exists(fileName))
@@ -304,14 +303,6 @@ namespace WebpageSteganography
             else
             {
                 throw new FileNotFoundException($"File '{fileName}' not found");
-            }
-        }
-
-        public void AddMessage(BitStack messageBits, StegMethod<string> method)
-        {
-            foreach (DocumentPart part in Parts)
-            {
-                part.AddMessage(messageBits, method);
             }
         }
 
