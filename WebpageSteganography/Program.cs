@@ -97,7 +97,7 @@ namespace WebpageSteganography
 
         public void AddMessage(BitStack messageBits, StegMethod<string> method)
         {
-            method.AddMessage(messageBits, LineContent);
+            LineContent = method.AddMessage(messageBits, LineContent);
         }
         public string[] GenerateLines() => new string[] { LineContent };
     }
