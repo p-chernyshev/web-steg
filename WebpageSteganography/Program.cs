@@ -512,6 +512,7 @@ namespace WebpageSteganography
     interface StegMethod<T>
     {
         T AddMessage(Message messageBits, T containerValue);
+        void GetMessage(Message messageBits, T containerValue);
     }
 
     class TrailingSpacesMethod : StegMethod<string>
@@ -523,6 +524,12 @@ namespace WebpageSteganography
                 containerValue += " ";
             }
             return containerValue;
+        }
+
+        public void GetMessage(Message messageBits, string containerValue)
+        {
+            bool bit = containerValue.Last() == ' ';
+            messageBits.AddBit(bit);
         }
     }
 
