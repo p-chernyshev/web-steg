@@ -15,12 +15,16 @@ namespace WebpageSteganography
         }
     }
 
-    class BitStack
+    class Message
     {
         public int Length => BitArray.Length;
         BitArray BitArray;
 
-        public BitStack(string str)
+        public Message()
+        {
+            BitArray = new BitArray(0, false);
+        }
+        public Message(string str)
         {
             var lengthBytes = BitConverter.GetBytes(str.Length);            
             var characterBytes = str
@@ -71,7 +75,7 @@ namespace WebpageSteganography
             Array.Copy(bytes, lengthBytes, 4);
             return BitConverter.ToInt32(lengthBytes);
         }
-        public bool Pop()
+        public bool GetBit()
         {
             if (BitArray.Length == 0) throw new InvalidOperationException("Bit stack has no elements");
 
@@ -81,7 +85,7 @@ namespace WebpageSteganography
 
             return bit;
         }
-        public bool[] Pop(int count)
+        public bool[] GetBits(int count)
         {
             if (count > BitArray.Length) count = BitArray.Length;
 
@@ -96,16 +100,14 @@ namespace WebpageSteganography
 
             return bits;
         }
-        public void Push(bool bit) { //=> Push(new[] { bit });
+        public void AddBit(bool bit) {
             BitArray.Length++;
-            BitArray.LeftShift(1);
-            BitArray[0] = bit;
+            BitArray[BitArray.Length - 1] = bit;
         }
-        public void Push(bool[] bits)
+        public void AddBits(bool[] bits)
         {
             BitArray.Length += bits.Length;
-            BitArray.LeftShift(bits.Length);
-            for (int i = 0; i < bits.Length; i++)
+            for (int i = BitArray.Length - bits.Length; i < BitArray.Length; i++)
             {
                 BitArray[i] = bits[i];
             }
@@ -114,7 +116,7 @@ namespace WebpageSteganography
 
     interface StegContainer<T>
     {
-        void AddMessage(BitStack messageBits, StegMethod<T> method);
+        void AddMessage(Message messageBits, StegMethod<T> method);
     }
 
     #region DocumentParts
@@ -136,7 +138,7 @@ namespace WebpageSteganography
             return length + 1;
         });
 
-        public void AddMessage(BitStack messageBits, StegMethod<string> method) {
+        public void AddMessage(Message messageBits, StegMethod<string> method) {
             foreach (DocumentPart part in Parts)
             {
                 part.AddMessage(messageBits, method);
@@ -170,7 +172,7 @@ namespace WebpageSteganography
             LineContent = CollapseWhitespace(line);
         }
 
-        public void AddMessage(BitStack messageBits, StegMethod<string> method)
+        public void AddMessage(Message messageBits, StegMethod<string> method)
         {
             LineContent = method.AddMessage(messageBits, LineContent);
         }
@@ -492,15 +494,14 @@ namespace WebpageSteganography
 
     interface StegMethod<T>
     {
-        T AddMessage(BitStack messageBits, T containerValue);
-        // GetMessage
+        T AddMessage(Message messageBits, T containerValue);
     }
 
     class TrailingSpacesMethod : StegMethod<string>
     {
-        public string AddMessage(BitStack messageBits, string containerValue)
+        public string AddMessage(Message messageBits, string containerValue)
         {
-            if (messageBits.Length != 0 && messageBits.Pop())
+            if (messageBits.Length != 0 && messageBits.GetBit())
             {
                 containerValue += " ";
             }
