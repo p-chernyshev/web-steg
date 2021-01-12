@@ -117,6 +117,7 @@ namespace WebpageSteganography
     interface StegContainer<T>
     {
         void AddMessage(Message messageBits, StegMethod<T> method);
+        void GetMessage(Message messageBits, StegMethod<T> method);
     }
 
     #region DocumentParts
@@ -145,12 +146,20 @@ namespace WebpageSteganography
             }
         }
 
+        public void GetMessage(Message messageBits, StegMethod<string> method)
+        {
+            for (int i = 0; i < Parts.Length && !messageBits.IsCompleteString(); i++)
+            {
+                Parts[i].GetMessage(messageBits, method);
+            }
+        }
+
         public string[] GenerateLines()
         {
             return Parts
                 .SelectMany(part => part.GenerateLines())
                 .ToArray();
-    }
+        }
     }
 
     class DocumentLine : DocumentPart
@@ -176,6 +185,14 @@ namespace WebpageSteganography
         {
             LineContent = method.AddMessage(messageBits, LineContent);
         }
+
+        public void GetMessage(Message messageBits, StegMethod<string> method)
+        {
+            method.GetMessage(messageBits, RawLine);
+            Console.WriteLine(RawLine.Replace(' ', '_'));
+            Console.WriteLine($"    {messageBits}");
+        }
+
         public string[] GenerateLines() => new string[] { LineContent };
     }
 
