@@ -219,8 +219,6 @@ namespace WebpageSteganography
         public void GetMessage(Message messageBits, StegMethod<string> method)
         {
             method.GetMessage(messageBits, RawLine);
-            Console.WriteLine(RawLine.Replace(' ', '_'));
-            Console.WriteLine($"    {messageBits}");
         }
 
         public string[] GenerateLines() => new string[] { LineContent };
