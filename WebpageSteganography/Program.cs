@@ -17,23 +17,54 @@ namespace WebpageSteganography
 
     class BitStack
     {
-        public int Length => bitArray.Length;
-        BitArray bitArray;
+        public int Length => BitArray.Length;
+        BitArray BitArray;
 
         public BitStack(string str)
         {
             byte[] bytes = str
                 .Select(character => Convert.ToByte(character))
                 .ToArray();
-            bitArray = new BitArray(bytes);
+            BitArray = new BitArray(bytes);
         }
         public bool Pop()
         {
-            if (bitArray.Length == 0) throw new InvalidOperationException("Bit stack has no elements");
-            bool bit = bitArray[0];
-            bitArray.RightShift(1);
-            bitArray.Length--;
+            if (BitArray.Length == 0) throw new InvalidOperationException("Bit stack has no elements");
+
+            bool bit = BitArray[0];
+            BitArray.RightShift(1);
+            BitArray.Length--;
+
             return bit;
+        }
+        public bool[] Pop(int count)
+        {
+            if (count > BitArray.Length) count = BitArray.Length;
+
+            bool[] bits = new bool[count];
+            for (int i = 0; i < count; i++)
+            {
+                bits[i] = BitArray[i];
+            }
+
+            BitArray.RightShift(count);
+            BitArray.Length -= count;
+
+            return bits;
+        }
+        public void Push(bool bit) { //=> Push(new[] { bit });
+            BitArray.Length++;
+            BitArray.LeftShift(1);
+            BitArray[0] = bit;
+        }
+        public void Push(bool[] bits)
+        {
+            BitArray.Length += bits.Length;
+            BitArray.LeftShift(bits.Length);
+            for (int i = 0; i < bits.Length; i++)
+            {
+                BitArray[i] = bits[i];
+            }
         }
     }
 
