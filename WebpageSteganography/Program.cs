@@ -35,7 +35,7 @@ namespace WebpageSteganography
         public bool IsCompleteString()
         {
             if (BitArray.Length < 32) return false;
-            if (CompleteStringLength() > ArrayLengthBytes() - 4) return false;
+            if (CompleteStringLength() * 8 > Length - 32) return false;
             return true;
         }
         public override string ToString()
