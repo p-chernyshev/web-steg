@@ -4,10 +4,40 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace WebpageSteganography
 {
+    struct HtmlAttribute
+    {
+        public readonly string RawString;
+        public readonly string Key;
+        public readonly string Value;
+        public HtmlAttribute(string rawString, string key)
+        {
+            RawString = rawString;
+            Key = key;
+            Value = null;
+        }
+        public HtmlAttribute(string rawValue, string key, string value)
+        {
+            RawString = rawValue;
+            Key = key;
+            Value = value;
+        }
+    }
+
+    interface StegContainer<T>
+    {
+        void AddMessage(Message messageBits, StegMethod<T> method);
+        void GetMessage(Message messageBits, StegMethod<T> method);
+    }
+
+    interface StegMethod<T>
+    {
+        T AddMessage(Message messageBits, T containerValue);
+        void GetMessage(Message messageBits, T containerValue);
+    }
+
     class Program
     {
         static void Main(string[] args)
@@ -26,18 +56,20 @@ namespace WebpageSteganography
         }
         public Message(string str)
         {
-            var lengthBytes = BitConverter.GetBytes(str.Length);            
+            var lengthBytes = BitConverter.GetBytes(str.Length);
             var characterBytes = str
                 .Select(character => Convert.ToByte(character))
                 .ToArray();
             BitArray = new BitArray(lengthBytes.Concat(characterBytes).ToArray());
         }
+
         public bool IsCompleteString()
         {
             if (Length < 32) return false;
             if (CompleteStringLength() * 8 > Length - 32) return false;
             return true;
         }
+
         public override string ToString()
         {
             if (Length < 32) return null;
@@ -55,6 +87,7 @@ namespace WebpageSteganography
 
             return new string(characters);
         }
+
         byte[] ToBytes()
         {
             byte[] bytes = new byte[ArrayLengthBytes()];
@@ -62,12 +95,14 @@ namespace WebpageSteganography
 
             return bytes;
         }
+
         int ArrayLengthBytes()
         {
             int arrayLengthBytes = Length / 8;
             if (Length % 8 != 0) arrayLengthBytes++;
             return arrayLengthBytes;
         }
+
         int CompleteStringLength()
         {
             byte[] bytes = ToBytes();
@@ -75,6 +110,7 @@ namespace WebpageSteganography
             Array.Copy(bytes, lengthBytes, 4);
             return BitConverter.ToInt32(lengthBytes);
         }
+
         public bool GetBit()
         {
             if (Length == 0) throw new InvalidOperationException("Bit stack has no elements");
@@ -100,6 +136,7 @@ namespace WebpageSteganography
 
             return bits;
         }
+
         public void AddBit(bool bit) {
             BitArray.Length++;
             BitArray[BitArray.Length - 1] = bit;
@@ -112,12 +149,6 @@ namespace WebpageSteganography
                 BitArray[i] = bits[i];
             }
         }
-    }
-
-    interface StegContainer<T>
-    {
-        void AddMessage(Message messageBits, StegMethod<T> method);
-        void GetMessage(Message messageBits, StegMethod<T> method);
     }
 
     #region DocumentParts
@@ -170,7 +201,6 @@ namespace WebpageSteganography
         static string CollapseWhitespace(string line)
         {
             string[] parts = line.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            //var nonEmptyParts = parts.Where(part => part.Length != 0);
             return string.Join(" ", parts);
         }
 
@@ -228,12 +258,9 @@ namespace WebpageSteganography
         }
 
     }
-
     class CssRuleBlock : DocumentBlock
     {
         public static bool CanParse(string line) => CssSelectorLine.CanParse(line);
-        //nocheck
-        //no empty lines
         public CssRuleBlock(string[] lines)
         {
             DocumentLine[] selectors = lines
@@ -255,7 +282,6 @@ namespace WebpageSteganography
 
     class CssSelectorLine : DocumentLine
     {
-        //bool Last;
         public static bool CanParse(string line)
         {
             line = line.Trim();
@@ -292,24 +318,6 @@ namespace WebpageSteganography
         }
     }
 
-    struct HtmlAttribute
-    {
-        public readonly string RawString;
-        public readonly string Key;
-        public readonly string Value;
-        public HtmlAttribute(string rawString, string key)
-        {
-            RawString = rawString;
-            Key = key;
-            Value = null;
-        }
-        public HtmlAttribute(string rawValue, string key, string value)
-        {
-            RawString = rawValue;
-            Key = key;
-            Value = value;
-        }
-    }
     class HtmlOpeningTagLine : DocumentLine
     {
         public readonly string Name;
@@ -385,10 +393,6 @@ namespace WebpageSteganography
             Name = LineContent.Trim(new[] { '<', '>', '/' });
         }
     }
-    //class HtmlTextLine : DocumentLine
-    //{
-    //    public HtmlTextLine(string line) : base(line) { }
-    //}
 
     #endregion
 
@@ -400,8 +404,7 @@ namespace WebpageSteganography
         {
             if (File.Exists(fileName))
             {
-                string[] lines = File.ReadAllLines(fileName, Encoding.UTF8); // CSS??
-                //lines = TrimWhitespace(lines);
+                string[] lines = File.ReadAllLines(fileName, Encoding.UTF8);
                 Parts = ParseLines(lines);
             }
             else
@@ -418,14 +421,6 @@ namespace WebpageSteganography
             }
             File.WriteAllLines(fileName, GenerateLines());
         }
-
-        //string[] TrimWhitespace(string[] lines)
-        //{
-        //    return lines
-        //        .Select(TrimWhitespace)
-        //        .Where(line => line.Length != 0)
-        //        .ToArray();
-        //}
 
         abstract protected DocumentPart[] ParseLines(string[] lines);
     }
@@ -508,12 +503,6 @@ namespace WebpageSteganography
     #endregion
 
     #region Methods
-
-    interface StegMethod<T>
-    {
-        T AddMessage(Message messageBits, T containerValue);
-        void GetMessage(Message messageBits, T containerValue);
-    }
 
     class TrailingSpacesMethod : StegMethod<string>
     {
