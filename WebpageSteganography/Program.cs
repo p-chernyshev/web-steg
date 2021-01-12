@@ -34,13 +34,13 @@ namespace WebpageSteganography
         }
         public bool IsCompleteString()
         {
-            if (BitArray.Length < 32) return false;
+            if (Length < 32) return false;
             if (CompleteStringLength() * 8 > Length - 32) return false;
             return true;
         }
         public override string ToString()
         {
-            if (BitArray.Length < 32) return null;
+            if (Length < 32) return null;
 
             byte[] bytes = ToBytes();
 
@@ -64,8 +64,8 @@ namespace WebpageSteganography
         }
         int ArrayLengthBytes()
         {
-            int arrayLengthBytes = BitArray.Length / 8;
-            if (BitArray.Length % 8 != 0) arrayLengthBytes++;
+            int arrayLengthBytes = Length / 8;
+            if (Length % 8 != 0) arrayLengthBytes++;
             return arrayLengthBytes;
         }
         int CompleteStringLength()
@@ -77,7 +77,7 @@ namespace WebpageSteganography
         }
         public bool GetBit()
         {
-            if (BitArray.Length == 0) throw new InvalidOperationException("Bit stack has no elements");
+            if (Length == 0) throw new InvalidOperationException("Bit stack has no elements");
 
             bool bit = BitArray[0];
             BitArray.RightShift(1);
