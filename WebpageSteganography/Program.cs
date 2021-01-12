@@ -22,10 +22,54 @@ namespace WebpageSteganography
 
         public BitStack(string str)
         {
-            byte[] bytes = str
+            var lengthBytes = BitConverter.GetBytes(str.Length);            
+            var characterBytes = str
                 .Select(character => Convert.ToByte(character))
                 .ToArray();
-            BitArray = new BitArray(bytes);
+            BitArray = new BitArray(lengthBytes.Concat(characterBytes).ToArray());
+        }
+        public bool IsCompleteString()
+        {
+            if (BitArray.Length < 32) return false;
+            if (CompleteStringLength() > ArrayLengthBytes() - 4) return false;
+            return true;
+        }
+        public override string ToString()
+        {
+            if (BitArray.Length < 32) return null;
+
+            byte[] bytes = ToBytes();
+
+            int length = Math.Min(CompleteStringLength(), ArrayLengthBytes() - 4);
+
+            byte[] characterBytes = new byte[length];
+            Array.Copy(bytes, 4, characterBytes, 0, length);
+
+            char[] characters = characterBytes
+                .Select(characterByte => Convert.ToChar(characterByte))
+                .ToArray();
+
+            return new string(characters);
+        }
+        byte[] ToBytes()
+        {
+            byte[] bytes = new byte[ArrayLengthBytes()];
+            BitArray.CopyTo(bytes, 0);
+
+            return bytes;
+        }
+        int ArrayLengthBytes()
+        {
+            int arrayLengthBytes = BitArray.Length / 8;
+            if (BitArray.Length % 8 != 0) arrayLengthBytes++;
+            return arrayLengthBytes;
+        }
+        int CompleteStringLength()
+        {
+            byte[] bytes = ToBytes();
+            byte[] lengthBytes = new byte[4];
+            Array.Copy(bytes, lengthBytes, 4);
+            return BitConverter.ToInt32(lengthBytes);
         }
         public bool Pop()
         {
