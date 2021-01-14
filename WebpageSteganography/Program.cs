@@ -189,6 +189,9 @@ namespace WebpageSteganography
                 BitArray[oldLength + i] = newBits[i];
             }
         }
+
+        public ushort GetUshort() => BitConverter.ToUInt16(GetBytes(2));
+        public void AddUshort(ushort value) => AddBytes(BitConverter.GetBytes(value));
     }
 
     #region DocumentParts
