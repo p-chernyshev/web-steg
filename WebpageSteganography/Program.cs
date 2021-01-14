@@ -12,7 +12,7 @@ namespace WebpageSteganography
         public bool HasValue => Value != null;
         public readonly string RawString;
         public readonly string Key;
-        public readonly string Value;
+        public string Value;
         public HtmlAttribute(string rawString, string key)
         {
             RawString = rawString;
@@ -560,6 +560,41 @@ namespace WebpageSteganography
         {
             bool bit = containerValue.Last() == ' ';
             messageBits.AddBit(bit);
+        }
+    }
+
+    class HtmlElementIdMethod : StegMethod<HtmlAttribute[]>
+    {
+        readonly string Separator = "__";
+        public HtmlAttribute[] AddMessage(Message messageBits, HtmlAttribute[] attributes)
+        {
+            int idIndex = Array.FindIndex(attributes, attribute => attribute.Key.ToLower() == "id");
+            if (idIndex != -1)
+            {
+                attributes[idIndex].Value += $"{Separator}{messageBits.GetUshort()}";
+            }
+            else
+            {
+                string id = $"id{Separator}{messageBits.GetUshort()}";
+                attributes = attributes
+                    .Prepend(new HtmlAttribute($"id=\"{id}\"", "id", id))
+                    .ToArray();
+            }
+            return attributes;
+        }
+
+        public void GetMessage(Message messageBits, HtmlAttribute[] attributes)
+        {
+            HtmlAttribute idAttribute = Array.Find(attributes, attribute => attribute.Key.ToLower() == "id");
+            if (idAttribute.HasValue)
+            {
+                var separatorPosition = idAttribute.Value.LastIndexOf(Separator);
+                string messageString = idAttribute.Value.Substring(separatorPosition + Separator.Length);
+                if (separatorPosition != -1 && ushort.TryParse(messageString, out ushort messageUshort))
+                {
+                    messageBits.AddUshort(messageUshort);
+                }
+            }
         }
     }
 
