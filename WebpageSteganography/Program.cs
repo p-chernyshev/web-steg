@@ -162,6 +162,33 @@ namespace WebpageSteganography
                 BitArray[i] = bits[i];
             }
         }
+
+        public byte[] GetBytes(int count)
+        {
+            int bytesTaken = Math.Min(count, ArrayLengthBytes());
+
+            var bytes = ToBytes()
+                // TODO Randomize
+                .Concat(new byte[count - bytesTaken]);
+
+            int bitsTaken = Math.Min(bytesTaken * 8, BitArray.Length);
+            BitArray.RightShift(bitsTaken);
+            BitArray.Length -= bitsTaken;
+
+            return bytes
+                .Take(count)
+                .ToArray();
+        }
+        public void AddBytes(byte[] bytes)
+        {
+            BitArray newBits = new BitArray(bytes);
+            int oldLength = BitArray.Length;
+            BitArray.Length += newBits.Length;
+            for (int i = 0; i < newBits.Length; i++)
+            {
+                BitArray[oldLength + i] = newBits[i];
+            }
+        }
     }
 
     #region DocumentParts
