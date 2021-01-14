@@ -388,14 +388,16 @@ namespace WebpageSteganography
 
     class HtmlOpeningTagLine : DocumentLine
     {
+        public readonly bool isEmptyElement;
         public readonly string Name;
-        HtmlAttribute[] Attributes;
+        protected HtmlAttribute[] Attributes;
         public static bool CanParse(string line)
         {
             line = line.Trim();
             return line[0] == '<' && line[1] != '/';
         }
         public HtmlOpeningTagLine(string line) : base(line) {
+            isEmptyElement = line[^2] == '/';
             line = LineContent.Trim(new[] { '<', '/', '>' });
 
             int spaceIndex = line.IndexOf(' ');
@@ -462,6 +464,27 @@ namespace WebpageSteganography
         }
     }
 
+    class HtmlBodyOpeningTagLine : HtmlOpeningTagLine, StegContainer<HtmlAttribute[]>
+    {
+        public HtmlBodyOpeningTagLine(string line) : base(line) { }
+
+        public void AddMessage(Message messageBits, StegMethod<HtmlAttribute[]> method)
+        {
+            Attributes = method.AddMessage(messageBits, Attributes);
+
+            var attributes = Attributes
+                .Select(attribute => attribute.ToString())
+                .Prepend(Name);
+            string emptyElementSlash = isEmptyElement ? "/" : string.Empty;
+            LineContent = $"<{string.Join(" ", attributes)}{emptyElementSlash}>";
+        }
+
+        public void GetMessage(Message messageBits, StegMethod<HtmlAttribute[]> method)
+        {
+            method.GetMessage(messageBits, Attributes);
+        }
+    }
+
     #endregion
 
     #region Documents
@@ -510,7 +533,15 @@ namespace WebpageSteganography
 
                 if (HtmlOpeningTagLine.CanParse(line))
                 {
-                    HtmlOpeningTagLine openingTag = new HtmlOpeningTagLine(line);
+                    HtmlOpeningTagLine openingTag;
+                    if (bodyStartIndex != 0 && bodyEndIndex == 0)
+                    {
+                        openingTag = new HtmlBodyOpeningTagLine(line);
+                    }
+                    else
+                    {
+                        openingTag = new HtmlOpeningTagLine(line);
+                    }
                     documentLine = openingTag;
                     if (openingTag.Name == "body") bodyStartIndex = i;
                 } else if (HtmlClosingTagLine.CanParse(line))
