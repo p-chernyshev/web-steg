@@ -66,7 +66,7 @@ namespace WebpageSteganography
 
     class Message
     {
-        public int Length => BitArray.Length;
+        int Length => BitArray.Length;
         BitArray BitArray;
 
         public Message()
@@ -132,7 +132,8 @@ namespace WebpageSteganography
 
         public bool GetBit()
         {
-            if (Length == 0) throw new InvalidOperationException("Bit stack has no elements");
+            // TODO Randomize
+            if (Length == 0) return false;
 
             bool bit = BitArray[0];
             BitArray.RightShift(1);
@@ -142,12 +143,17 @@ namespace WebpageSteganography
         }
         public bool[] GetBits(int count)
         {
-            if (count > BitArray.Length) count = BitArray.Length;
-
             bool[] bits = new bool[count];
+
+            if (count > BitArray.Length) count = BitArray.Length;
             for (int i = 0; i < count; i++)
             {
                 bits[i] = BitArray[i];
+            }
+            for (int i = BitArray.Length; i < bits.Length; i++)
+            {
+                // TODO Randomize
+                bits[i] = false;
             }
 
             BitArray.RightShift(count);
@@ -570,7 +576,7 @@ namespace WebpageSteganography
     {
         public string AddMessage(Message messageBits, string containerValue)
         {
-            if (messageBits.Length != 0 && messageBits.GetBit())
+            if (messageBits.GetBit())
             {
                 containerValue += " ";
             }
