@@ -39,6 +39,12 @@ namespace WebpageSteganography
         }
     }
 
+    interface GenericStegContainer
+    {
+        void AddMessage<T>(Message messageBits, StegMethod<T> method);
+        void GetMessage<T>(Message messageBits, StegMethod<T> method);
+    }
+
     interface StegContainer<T>
     {
         void AddMessage(Message messageBits, StegMethod<T> method);
@@ -196,12 +202,12 @@ namespace WebpageSteganography
 
     #region DocumentParts
 
-    interface DocumentPart : StegContainer<string>
+    interface DocumentPart
     {
         string[] GenerateLines();
     }
 
-    class DocumentBlock : DocumentPart
+    class DocumentBlock : DocumentPart, GenericStegContainer
     {
         public DocumentPart[] Parts;
         public int Length => Parts.Aggregate(0, (length, part) =>
@@ -213,18 +219,33 @@ namespace WebpageSteganography
             return length + 1;
         });
 
-        public void AddMessage(Message messageBits, StegMethod<string> method) {
+        public void AddMessage<T>(Message messageBits, StegMethod<T> method)
+        {
             foreach (DocumentPart part in Parts)
             {
-                part.AddMessage(messageBits, method);
+                if (part is GenericStegContainer genericContainer)
+                {
+                    genericContainer.AddMessage(messageBits, method);
+                }
+                if (part is StegContainer<T> containerOfType)
+                {
+                    containerOfType.AddMessage(messageBits, method);
+                }
             }
         }
 
-        public void GetMessage(Message messageBits, StegMethod<string> method)
+        public void GetMessage<T>(Message messageBits, StegMethod<T> method)
         {
             for (int i = 0; i < Parts.Length && !messageBits.IsCompleteString(); i++)
             {
-                Parts[i].GetMessage(messageBits, method);
+                if (Parts[i] is GenericStegContainer genericContainer)
+                {
+                    genericContainer.GetMessage(messageBits, method);
+                }
+                if (Parts[i] is StegContainer<T> containerOfType)
+                {
+                    containerOfType.GetMessage(messageBits, method);
+                }
             }
         }
 
@@ -236,7 +257,7 @@ namespace WebpageSteganography
         }
     }
 
-    class DocumentLine : DocumentPart
+    class DocumentLine : DocumentPart, StegContainer<string>
     {
         protected string RawLine;
         protected string LineContent;
@@ -439,7 +460,7 @@ namespace WebpageSteganography
 
     #region Documents
 
-    abstract class Document : DocumentBlock, StegContainer<string>
+    abstract class Document : DocumentBlock
     {
         public Document(string fileName)
         {
