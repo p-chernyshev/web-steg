@@ -9,10 +9,11 @@ namespace WebpageSteganography
 {
     struct HtmlAttribute
     {
+        // TODO Move Attribute parsing logic here
         public bool HasValue => Value != null;
         public readonly string RawString;
         public readonly string Key;
-        public string Value;
+        public string Value; // TODO setter
         public HtmlAttribute(string rawString, string key)
         {
             RawString = rawString;
@@ -77,7 +78,7 @@ namespace WebpageSteganography
         {
             var lengthBytes = BitConverter.GetBytes(str.Length);
             var characterBytes = str
-                .Select(character => Convert.ToByte(character))
+                .Select(character => Convert.ToByte(character)) // TODO .SelectMultiple(character => BitConverter.GetBytes(character)) for non-ASCII chars??
                 .ToArray();
             BitArray = new BitArray(lengthBytes.Concat(characterBytes).ToArray());
         }
@@ -266,7 +267,7 @@ namespace WebpageSteganography
     class DocumentLine : DocumentPart, StegContainer<string>
     {
         protected string RawLine;
-        protected string LineContent;
+        protected string LineContent; // TODO Remove?
         bool IsEmpty => LineContent.Length == 0;
         static string CollapseWhitespace(string line)
         {
