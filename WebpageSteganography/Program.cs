@@ -9,6 +9,7 @@ namespace WebpageSteganography
 {
     struct HtmlAttribute
     {
+        public bool HasValue => Value != null;
         public readonly string RawString;
         public readonly string Key;
         public readonly string Value;
@@ -23,6 +24,18 @@ namespace WebpageSteganography
             RawString = rawValue;
             Key = key;
             Value = value;
+        }
+
+        public override string ToString()
+        {
+            if (HasValue)
+            {
+                char quotemark = RawString.Last();
+                return $"{Key}={quotemark}{Value}{quotemark}";
+            } else
+            {
+                return Key;
+            }
         }
     }
 
@@ -365,7 +378,7 @@ namespace WebpageSteganography
                     int openingQuoteIndex = line.IndexOf(quote);
                     int closingQuoteIndex = line.IndexOf(quote, openingQuoteIndex + 1);
                     string rawKeyValue = line.Substring(0, closingQuoteIndex + 1);
-                    string value = line.Substring(openingQuoteIndex, closingQuoteIndex - openingQuoteIndex + 1);
+                    string value = line.Substring(openingQuoteIndex + 1, closingQuoteIndex - openingQuoteIndex - 1);
 
                     attributes.Add(new HtmlAttribute(rawKeyValue, key, value));
 
