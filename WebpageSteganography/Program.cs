@@ -58,6 +58,30 @@ namespace WebpageSteganography
         void GetMessage(Message messageBits, T containerValue);
     }
 
+    interface IReorderable
+    {
+        string[] Keys { get; }
+        T[] Reorder<T>(T[] content, int[] newIndexes)
+        {
+            T[] reorderedContent = new T[content.Length];
+
+            int length = Math.Min(content.Length, newIndexes.Length);
+            for (int i = 0; i < length; i++)
+            {
+                int newIndex = newIndexes[i];
+                reorderedContent[newIndex] = content[i];
+            }
+            for (int i = length; i < content.Length; i++)
+            {
+                reorderedContent[i] = content[i];
+            }
+
+            return reorderedContent;
+        }
+
+        void Reorder(int[] newIndexes);
+    }
+
     class Program
     {
         static void Main(string[] args)
