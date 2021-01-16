@@ -289,6 +289,24 @@ namespace WebpageSteganography
                 .SelectMany(part => part.GenerateLines())
                 .ToArray();
         }
+
+        protected void FilterEmptyLines()
+        {
+            foreach (DocumentPart part in Parts)
+            {
+                if (part is DocumentBlock block)
+                {
+                    block.FilterEmptyLines();
+                }
+            }
+            Parts = Parts
+                .Where(part =>
+                {
+                    if (part is DocumentLine line && line.IsEmpty) return false;
+                    return true;
+                })
+                .ToArray();
+        }
     }
 
     class DocumentLine : DocumentPart, StegContainer<string>
@@ -296,7 +314,7 @@ namespace WebpageSteganography
         public string SortKey => LineContent;
         protected string RawLine;
         protected string LineContent; // TODO Remove?
-        bool IsEmpty => LineContent.Length == 0;
+        public bool IsEmpty => LineContent.Length == 0;
         static string CollapseWhitespace(string line)
         {
             string[] parts = line.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
