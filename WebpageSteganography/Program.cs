@@ -255,6 +255,10 @@ namespace WebpageSteganography
 
         public void AddMessage<T>(Message messageBits, StegMethod<T> method)
         {
+            if (this is StegContainer<T> thisContainerOfType)
+            {
+                thisContainerOfType.AddMessage(messageBits, method);
+            }
             foreach (DocumentPart part in Parts)
             {
                 if (part is GenericStegContainer genericContainer)
@@ -270,6 +274,10 @@ namespace WebpageSteganography
 
         public void GetMessage<T>(Message messageBits, StegMethod<T> method)
         {
+            if (this is StegContainer<T> thisContainerOfType)
+            {
+                thisContainerOfType.GetMessage(messageBits, method);
+            }
             for (int i = 0; i < Parts.Length && !messageBits.IsCompleteString(); i++)
             {
                 if (Parts[i] is GenericStegContainer genericContainer)
