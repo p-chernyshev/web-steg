@@ -236,11 +236,13 @@ namespace WebpageSteganography
 
     interface DocumentPart
     {
+        string SortKey { get; }
         string[] GenerateLines();
     }
 
     class DocumentBlock : DocumentPart, GenericStegContainer
     {
+        public string SortKey => Parts[0].SortKey;
         public DocumentPart[] Parts;
         public int Length => Parts.Aggregate(0, (length, part) =>
         {
@@ -291,6 +293,7 @@ namespace WebpageSteganography
 
     class DocumentLine : DocumentPart, StegContainer<string>
     {
+        public string SortKey => LineContent;
         protected string RawLine;
         protected string LineContent; // TODO Remove?
         bool IsEmpty => LineContent.Length == 0;
