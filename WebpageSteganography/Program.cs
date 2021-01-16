@@ -319,7 +319,10 @@ namespace WebpageSteganography
 
     class DocumentLine : DocumentPart, StegContainer<string>
     {
-        public string SortKey => LineContent;
+        private static int Counter = 0;
+
+        public string SortKey => $"{LineContent}{Number}";
+        protected int Number;
         protected string RawLine;
         protected string LineContent; // TODO Remove?
         public bool IsEmpty => LineContent.Length == 0;
@@ -332,6 +335,7 @@ namespace WebpageSteganography
         private DocumentLine() { }
         public DocumentLine(string line)
         {
+            Number = Counter++;
             RawLine = line;
             LineContent = CollapseWhitespace(line);
         }
