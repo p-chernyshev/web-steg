@@ -392,7 +392,21 @@ namespace WebpageSteganography
     {
         public readonly bool isEmptyElement;
         public readonly string Name;
-        protected HtmlAttribute[] Attributes;
+        private HtmlAttribute[] attributes;
+        protected HtmlAttribute[] Attributes
+        {
+            get => attributes;
+            set
+            {
+                attributes = value;
+
+                var nameAndAttributes = attributes
+                    .Select(attribute => attribute.ToString())
+                    .Prepend(Name);
+                string emptyElementSlash = isEmptyElement ? "/" : string.Empty;
+                LineContent = $"<{string.Join(" ", nameAndAttributes)}{emptyElementSlash}>";
+            }
+        }
         public static bool CanParse(string line)
         {
             line = line.Trim();
@@ -473,12 +487,6 @@ namespace WebpageSteganography
         public void AddMessage(Message messageBits, StegMethod<HtmlAttribute[]> method)
         {
             Attributes = method.AddMessage(messageBits, Attributes);
-
-            var attributes = Attributes
-                .Select(attribute => attribute.ToString())
-                .Prepend(Name);
-            string emptyElementSlash = isEmptyElement ? "/" : string.Empty;
-            LineContent = $"<{string.Join(" ", attributes)}{emptyElementSlash}>";
         }
 
         public void GetMessage(Message messageBits, StegMethod<HtmlAttribute[]> method)
