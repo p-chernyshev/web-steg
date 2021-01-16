@@ -707,5 +707,68 @@ namespace WebpageSteganography
         }
     }
 
+    class SortingMethod : StegMethod<IReorderable>
+    {
+        public IReorderable AddMessage(Message messageBits, IReorderable containerValue)
+        {
+            var indexedKeys = containerValue.Keys
+                .Select((key, index) => new { Key = key, Index = index })
+                .OrderBy(key => key.Key)
+                .ToArray();
+            if (indexedKeys.Length < 2) return containerValue;
+
+            bool[] bits = messageBits
+                .GetBits(indexedKeys.Length - 1)
+                .Prepend(true)
+                .ToArray();
+
+            var keysToDisplace = indexedKeys
+                .Where((_, index) => bits[index])
+                .ToArray();
+
+            if (keysToDisplace.Length != 0)
+            {
+                var displacedKeys = keysToDisplace
+                    .Skip(1)
+                    .Append(keysToDisplace.First())
+                    .ToArray();
+
+                for (int i = 0, indexOfSorted = Array.FindIndex(bits, bit => bit); i < displacedKeys.Length; i++)
+                {
+                    indexedKeys[indexOfSorted] = displacedKeys[i];
+                    indexOfSorted = Array.FindIndex(bits, indexOfSorted + 1, bit => bit);
+                }
+            }
+
+            int[] newIndexes = new int[indexedKeys.Length];
+
+            for (int i = 0; i < indexedKeys.Length; i++)
+            {
+                int oldIndex = indexedKeys[i].Index;
+                newIndexes[oldIndex] = i;
+            }
+
+            containerValue.Reorder(newIndexes);
+            return containerValue;
+        }
+
+        public void GetMessage(Message messageBits, IReorderable containerValue)
+        {
+            string[] keys = containerValue.Keys;
+            if (keys.Length < 2) return;
+
+            string[] keysSorted = (string[])keys.Clone();
+            Array.Sort(keysSorted);
+
+            bool[] bits = new bool[keys.Length - 1];
+            for (int i = 1; i < keys.Length; i++)
+            {
+                bits[i - 1] = keys[i] != keysSorted[i];
+            }
+
+            messageBits.AddBits(bits);
+        }
+    }
+
     #endregion
 }
