@@ -169,10 +169,11 @@ namespace WebpageSteganography
         }
         public void AddBits(bool[] bits)
         {
+            int oldLength = BitArray.Length;
             BitArray.Length += bits.Length;
-            for (int i = BitArray.Length - bits.Length; i < BitArray.Length; i++)
+            for (int i = 0; i < bits.Length; i++)
             {
-                BitArray[i] = bits[i];
+                BitArray[oldLength + i] = bits[i];
             }
         }
 
