@@ -385,7 +385,7 @@ namespace WebpageSteganography
         }
 
     }
-    class CssRuleBlock : DocumentBlock
+    class CssRuleBlock : DocumentBlock, IReorderable, StegContainer<IReorderable>
     {
         public static bool CanParse(string line) => CssSelectorLine.CanParse(line);
         public CssRuleBlock(string[] lines)
@@ -404,6 +404,42 @@ namespace WebpageSteganography
             DocumentLine closingBrace = new CssClosingBraceLine(closingBraceLine);
 
             Parts = selectors.Concat(properties).Append(closingBrace).ToArray();
+        }
+
+        public void AddMessage(Message messageBits, StegMethod<IReorderable> method)
+        {
+            method.AddMessage(messageBits, this);
+        }
+
+        public void GetMessage(Message messageBits, StegMethod<IReorderable> method)
+        {
+            method.GetMessage(messageBits, this);
+        }
+
+        public string[] Keys => Parts.Where(part => part is CssPropertyLine).Select(line => line.SortKey).ToArray();//.Select(attribute => attribute.Key).ToArray();
+
+        public void Reorder(int[] newIndexes)
+        {
+            int propertyIndex = Array.FindIndex(Parts, part => part is CssPropertyLine);
+            var partsWithoutProperties = Parts.Where(part => !(part is CssPropertyLine)).ToArray();
+            var properties = Parts.Where(part => part is CssPropertyLine).ToArray();
+            properties = (this as IReorderable).Reorder(properties, newIndexes);
+
+            var newParts = new DocumentPart[Parts.Length]; // unnecessary, can use Parts
+            for (int i = 0; i < propertyIndex; i++)
+            {
+                newParts[i] = partsWithoutProperties[i];
+            }
+            for (int i = 0; i < properties.Length; i++)
+            {
+                newParts[propertyIndex + i] = properties[i];
+            }
+            for (int i = propertyIndex; i < partsWithoutProperties.Length; i++)
+            {
+                newParts[i + properties.Length] = partsWithoutProperties[i];
+            }
+
+            Parts = newParts;
         }
     }
 
@@ -426,6 +462,7 @@ namespace WebpageSteganography
             int colonPosition = line.IndexOf(':');
             Key = line.Substring(0, colonPosition);
             Value = line.Substring(colonPosition + 1);
+            LineContent = line + ";";
         }
     }
     class CssClosingBraceLine : DocumentLine
