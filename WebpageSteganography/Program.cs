@@ -606,6 +606,8 @@ namespace WebpageSteganography
         }
     }
 
+    // TODO class HtmlComment
+
     #endregion
 
     #region Documents
@@ -727,6 +729,7 @@ namespace WebpageSteganography
 
         public void GetMessage(Message messageBits, StegMethod<IReorderable> method)
         {
+            // TODO Sorting broken, do not use
             method.GetMessage(messageBits, this);
         }
 
