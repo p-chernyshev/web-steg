@@ -767,14 +767,14 @@ namespace WebpageSteganography
         public HtmlAttribute AddMessage(Message messageBits, HtmlAttribute containerValue)
         {
             containerValue.Quotemark = messageBits.GetBit() ?
-                '"' :
-                '\'';
+                '\'' :
+                '"';
             return containerValue;
         }
 
         public void GetMessage(Message messageBits, HtmlAttribute containerValue)
         {
-            messageBits.AddBit(containerValue.Quotemark == '"');
+            messageBits.AddBit(containerValue.Quotemark == '\'');
         }
     }
 
