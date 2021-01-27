@@ -330,7 +330,7 @@ namespace WebpageSteganography
 
         public string SortKey => $"{LineContent}{Number}";
         protected int Number;
-        protected string RawLine;
+        public string RawLine { get; protected set; }
         protected string LineContent; // TODO Remove?
         public bool IsEmpty => LineContent.Length == 0;
         static string CollapseWhitespace(string line)
@@ -470,6 +470,11 @@ namespace WebpageSteganography
             Key = line.Substring(0, colonPosition);
             Value = line.Substring(colonPosition + 1);
             LineContent = line + ";";
+        }
+
+        public void AddRemoveSpace(bool shouldAdd)
+        {
+            LineContent = $"{Key}:{(shouldAdd ? " " : "")}{Value};";
         }
     }
     class CssClosingBraceLine : DocumentLine
@@ -970,6 +975,22 @@ namespace WebpageSteganography
             }
 
             messageBits.AddBits(bits);
+        }
+    }
+
+    class ColonSpaceMethod : StegMethod<CssPropertyLine>
+    {
+        public CssPropertyLine AddMessage(Message messageBits, CssPropertyLine containerValue)
+        {
+            containerValue.AddRemoveSpace(messageBits.GetBit());
+            return containerValue;
+        }
+
+        public void GetMessage(Message messageBits, CssPropertyLine containerValue)
+        {
+            string line = containerValue.RawLine;
+            int colonPosition = line.IndexOf(':');
+            messageBits.AddBit(line[colonPosition + 1] == ' ');
         }
     }
 
