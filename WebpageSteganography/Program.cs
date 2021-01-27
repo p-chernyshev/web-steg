@@ -484,7 +484,7 @@ namespace WebpageSteganography
         }
     }
 
-    class HtmlOpeningTagLine : DocumentLine, IReorderable, StegContainer<IReorderable>
+    class HtmlOpeningTagLine : DocumentLine, IReorderable, StegContainer<IReorderable>, StegContainer<HtmlAttribute>
     {
         public readonly bool isEmptyElement;
         public readonly string Name;
@@ -577,6 +577,21 @@ namespace WebpageSteganography
         public void Reorder(int[] newIndexes)
         {
             Attributes = (this as IReorderable).Reorder(Attributes, newIndexes);
+        }
+
+        public void AddMessage(Message messageBits, StegMethod<HtmlAttribute> method)
+        {
+            Attributes = Attributes
+                .Select(attribute => method.AddMessage(messageBits, attribute))
+                .ToArray();
+        }
+
+        public void GetMessage(Message messageBits, StegMethod<HtmlAttribute> method)
+        {
+            foreach(HtmlAttribute attribute in Attributes)
+            {
+                method.GetMessage(messageBits, attribute);
+            }
         }
     }
     class HtmlClosingTagLine : DocumentLine
