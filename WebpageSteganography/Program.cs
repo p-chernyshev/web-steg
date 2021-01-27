@@ -747,6 +747,22 @@ namespace WebpageSteganography
 
     #region Methods
 
+    class QuotemarkMethod : StegMethod<HtmlAttribute>
+    {
+        public HtmlAttribute AddMessage(Message messageBits, HtmlAttribute containerValue)
+        {
+            containerValue.Quotemark = messageBits.GetBit() ?
+                '"' :
+                '\'';
+            return containerValue;
+        }
+
+        public void GetMessage(Message messageBits, HtmlAttribute containerValue)
+        {
+            messageBits.AddBit(containerValue.Quotemark == '"');
+        }
+    }
+
     class DoubleSpacesMethod : StegMethod<string>
     {
         public string AddMessage(Message messageBits, string containerValue)
