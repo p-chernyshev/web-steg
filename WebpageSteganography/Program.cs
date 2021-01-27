@@ -745,6 +745,50 @@ namespace WebpageSteganography
 
     #region Methods
 
+    class DoubleSpacesMethod : StegMethod<string>
+    {
+        public string AddMessage(Message messageBits, string containerValue)
+        {
+            int[] spaceIndexes = containerValue
+                .Select((character, index) => new {c = character, index = index})
+                .Where(charIndex => charIndex.c == ' ')
+                .Select(charIndex => charIndex.index)
+                .ToArray();
+
+            bool[] bits = messageBits.GetBits(spaceIndexes.Length);
+
+            for (int i = spaceIndexes.Length - 1; i >= 0; i--)
+            {
+                if (bits[i])
+                {
+                    containerValue = containerValue.Insert(spaceIndexes[i], " ");
+                }
+            }
+
+            return containerValue;
+        }
+
+        public void GetMessage(Message messageBits, string containerValue)
+        {
+            List<bool> bits = new List<bool>();
+
+            for (int i = containerValue.IndexOf(' '); i != -1; i = containerValue.IndexOf(' ', i + 1))
+            {
+                if (containerValue.Length > i + 1 && containerValue[i + 1] == ' ')
+                {
+                    bits.Add(true);
+                    i++;
+                }
+                else
+                {
+                    bits.Add(false);
+                }
+            }
+
+            messageBits.AddBits(bits.ToArray());
+        }
+    }
+
     class TrailingSpacesMethod : StegMethod<string>
     {
         public string AddMessage(Message messageBits, string containerValue)
