@@ -15,26 +15,31 @@ namespace WebpageSteganography
         public readonly string Key;
         public string Value; // TODO setter
         public char Quotemark;
+        public string Equals;
         public HtmlAttribute(string rawString, string key)
         {
             RawString = rawString;
             Key = key;
             Value = null;
             Quotemark = RawString.Last();
+            Equals = null;
         }
-        public HtmlAttribute(string rawValue, string key, string value)
+        public HtmlAttribute(string rawValue, string key, string value = null)
         {
             RawString = rawValue;
             Key = key;
             Value = value;
             Quotemark = RawString.Last();
+            Equals = RawString
+                .Substring(Key.Length)
+                .Replace($"{Quotemark}{Value}{Quotemark}", "");
         }
 
         public override string ToString()
         {
             if (HasValue)
             {
-                return $"{Key}={Quotemark}{Value}{Quotemark}";
+                return $"{Key}{Equals}{Quotemark}{Value}{Quotemark}";
             } else
             {
                 return Key;
@@ -761,6 +766,36 @@ namespace WebpageSteganography
     #endregion
 
     #region Methods
+
+    class EqualsSpaceMethod : StegMethod<HtmlAttribute>
+    {
+        public HtmlAttribute AddMessage(Message messageBits, HtmlAttribute containerValue)
+        {
+            if (containerValue.HasValue)
+            {
+                bool[] bits = messageBits.GetBits(2);
+                string equals = containerValue.Equals.Trim();
+
+                if (bits[0]) equals = " " + equals;
+                if (bits[1]) equals = equals + " ";
+
+                containerValue.Equals = equals;
+            }
+            return containerValue;
+        }
+
+        public void GetMessage(Message messageBits, HtmlAttribute containerValue)
+        {
+            if (containerValue.HasValue)
+            {
+                bool[] bits = new bool[2];
+                string equals = containerValue.Equals;
+                bits[0] = equals[0] == ' ';
+                bits[1] = equals[^1] == ' ';
+                messageBits.AddBits(bits);
+            }
+        }
+    }
 
     class QuotemarkMethod : StegMethod<HtmlAttribute>
     {
