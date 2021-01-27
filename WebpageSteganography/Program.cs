@@ -392,7 +392,7 @@ namespace WebpageSteganography
         }
 
     }
-    class CssRuleBlock : DocumentBlock, IReorderable, StegContainer<IReorderable>
+    class CssRuleBlock : DocumentBlock, IReorderable, StegContainer<IReorderable>, StegContainer<CssPropertyLine>
     {
         public static bool CanParse(string line) => CssSelectorLine.CanParse(line);
         public CssRuleBlock(string[] lines)
@@ -447,6 +447,28 @@ namespace WebpageSteganography
             }
 
             Parts = newParts;
+        }
+
+        public void AddMessage(Message messageBits, StegMethod<CssPropertyLine> method)
+        {
+            foreach(var part in Parts)
+            {
+                if (part is CssPropertyLine propertyLine)
+                {
+                    method.AddMessage(messageBits, propertyLine);
+                }
+            }
+        }
+
+        public void GetMessage(Message messageBits, StegMethod<CssPropertyLine> method)
+        {
+            foreach (var part in Parts)
+            {
+                if (part is CssPropertyLine propertyLine)
+                {
+                    method.GetMessage(messageBits, propertyLine);
+                }
+            }
         }
     }
 
