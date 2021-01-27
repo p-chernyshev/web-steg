@@ -11,28 +11,30 @@ namespace WebpageSteganography
     {
         // TODO Move Attribute parsing logic here
         public bool HasValue => Value != null;
-        public readonly string RawString;
+        public string RawString;
         public readonly string Key;
         public string Value; // TODO setter
+        public char Quotemark;
         public HtmlAttribute(string rawString, string key)
         {
             RawString = rawString;
             Key = key;
             Value = null;
+            Quotemark = RawString.Last();
         }
         public HtmlAttribute(string rawValue, string key, string value)
         {
             RawString = rawValue;
             Key = key;
             Value = value;
+            Quotemark = RawString.Last();
         }
 
         public override string ToString()
         {
             if (HasValue)
             {
-                char quotemark = RawString.Last();
-                return $"{Key}={quotemark}{Value}{quotemark}";
+                return $"{Key}={Quotemark}{Value}{Quotemark}";
             } else
             {
                 return Key;
