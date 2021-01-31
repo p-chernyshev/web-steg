@@ -93,12 +93,39 @@ namespace WebpageSteganography
     {
         static void Main(string[] args)
         {
+            //var method = new TrailingSpacesMethod();
+            //var method = new HtmlElementIdMethod();
+            //var method = new DoubleSpacesMethod();
+            //var method = new QuotemarkMethod();
+            //var method = new EqualsSpaceMethod();
+            //var method = new ColonSpaceMethod();
+            var method = new SortingMethod();
+
+            string messageString = "Pellentesque aliquet ante et enim lacinia malesuada.";
+            Message message = new Message(messageString);
+            var initialMessageLength = message.Length;
+            Console.WriteLine($"Кодируемое сообщение:\n{message}");
+
+            //Document document = new Html("../../../jisho.html");
+            Document document = new Css("../../../jisho.css");
+            document.AddMessage(message, method);
+            //document.WriteToFile("../../../jisho.html");
+            document.WriteToFile("../../../jisho.css");
+
+            //Document document2 = new Html("../../../jisho.html");
+            Document document2 = new Css("../../../jisho.css");
+            Message decodedMessage = new Message();
+            document2.GetMessage(decodedMessage, method);
+            document.GetMessage(decodedMessage, method);
+            Console.WriteLine($"\nДекодированное сообщение:\n{decodedMessage}");
+
+            Console.WriteLine($"Длина кодируемого сообщения: {initialMessageLength} бит\nДлина закодированной части: {initialMessageLength - message.Length} бит ({(initialMessageLength - message.Length)/8} Байт)");
         }
     }
 
     class Message
     {
-        int Length => BitArray.Length;
+        public int Length => BitArray.Length;
         BitArray BitArray;
 
         public Message()
@@ -897,7 +924,7 @@ namespace WebpageSteganography
 
         public void GetMessage(Message messageBits, string containerValue)
         {
-            bool bit = containerValue.Last() == ' ';
+            bool bit = containerValue.Length != 0 && containerValue.Last() == ' ';
             messageBits.AddBit(bit);
         }
     }
