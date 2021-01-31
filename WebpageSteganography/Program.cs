@@ -767,7 +767,7 @@ namespace WebpageSteganography
         }
     }
 
-    class Css : Document, IReorderable, StegContainer<IReorderable>
+    class Css : Document
     {
         public Css(string fileName) : base(fileName) { }
         override protected DocumentPart[] ParseLines(string[] lines)
@@ -794,26 +794,6 @@ namespace WebpageSteganography
             }
 
             return parts.ToArray();
-        }
-
-
-        public void AddMessage(Message messageBits, StegMethod<IReorderable> method)
-        {
-            FilterEmptyLines();
-            method.AddMessage(messageBits, this);
-        }
-
-        public void GetMessage(Message messageBits, StegMethod<IReorderable> method)
-        {
-            // TODO Sorting broken, do not use
-            method.GetMessage(messageBits, this);
-        }
-
-        public string[] Keys => Parts.Select(part => part.SortKey).ToArray();
-
-        public void Reorder(int[] newIndexes)
-        {
-            Parts = (this as IReorderable).Reorder(Parts, newIndexes);
         }
     }
 
